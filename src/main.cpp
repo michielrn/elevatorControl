@@ -58,7 +58,7 @@ void toggleDirection()  {
 
 void doLCD()  {
   lcd.clear();
-  lcd.print(position, 5);
+  lcd.print(position);
   lcd.print(F(" "));
   lcd.print(direction);
 
