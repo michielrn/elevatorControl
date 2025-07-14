@@ -1,5 +1,8 @@
 // Libraries
 #include <Arduino.h>
+#include <LCD_I2C.h>
+
+LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
 
 // Global Const
 const int A1A = 11;
@@ -9,8 +12,10 @@ const int posSensorPin = 2;
 
 // Global Var
 int speed = 0;
+int count = 0;
 int position = 100;
-bool direction = false;
+byte direction = false;
+bool lcdFlag = false;
 
 // Functions
 
@@ -23,6 +28,17 @@ void motorA(int s, bool d)  {
     analogWrite (A1A, s);
     digitalWrite (A1B, LOW);
   }
+}
+
+void lcdPrint() {
+  if (lcdFlag == false) return;
+
+  count++;
+  lcd.clear();
+  lcd.print(count);
+  lcd.print(position);
+
+  lcdFlag = false;
 }
 
 // Count number of flanks passing before break beam sensor
@@ -40,6 +56,14 @@ void toggleDirection()  {
  direction = !direction;
 }
 
+void doLCD()  {
+  lcd.clear();
+  lcd.print(position, 5);
+  lcd.print(F(" "));
+  lcd.print(direction);
+
+}
+
 void setup() {
   // put your setup code here, to run once:
 
@@ -51,8 +75,14 @@ void setup() {
   pinMode(A1A, OUTPUT);
   pinMode(A1B, OUTPUT);
 
-  Serial.begin(9600);
-  Serial.println("go!");
+  // Serial.begin(9600);
+  // Serial.println("go!");
+
+  lcd.begin();
+  lcd.backlight();  //backlight ON.. off with /noBacklight
+  lcd.setCursor(0, 0);
+  lcd.print(F("Go!"));
+  delay(1000);
 
 }
 
@@ -60,48 +90,45 @@ void loop() {
 
   // De ene kant op
   // op gang komen
-  Serial.print(position);
-  Serial.print (' ');
-  delay(2500);
+  // Serial.print(position);
+  // Serial.print (' ');
+
+  // Op gang komen
   motorA(155, direction);
+  delay(2500);
+  doLCD();
 
   // Volle snelheid
-
-  delay(2500);
   motorA(255, direction);
+  delay(2500);
+  doLCD();
 
   // Afremmen
-
-  delay(2500);
   motorA(155, direction);
-
-  // Stoppen
-  
   delay(2500);
-  motorA(0, direction);
- 
-  toggleDirection();
+  doLCD();
+
+  // Stoppen en Omkeren
+   motorA(0, direction);
+   toggleDirection();
+   delay(1000);
   
   // De andere kant op
-   Serial.println(position);
-  delay(2500);
   motorA(155, direction);
-
-  // Volle snelheid
-
   delay(2500);
+  doLCD();
+
   motorA(255, direction);
-
-  // Afremmen
-
   delay(2500);
-  motorA(155, direction);
+  doLCD();
 
-  // Stoppen
-  
+  motorA(155, direction);
   delay(1000);
+  doLCD();
+
   motorA(0, direction);
   toggleDirection();
+  delay(1000);
 
 
 }
