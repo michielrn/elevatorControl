@@ -1,23 +1,28 @@
-// Libraries
+//  Libraries
 #include <Arduino.h>
 #include <LCD_I2C.h>
+#include <I2CKeyPad.h>
 
+//  Initialize LCD object
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
 
-// Global Const
-const int A1A = 11;
-const int A1B = 12;
-const int posSensorPin = 2;
+//  Initialize Keypad object
 
 
-// Global Var
+//  Global Const
+const byte A1A = 11;
+const byte A1B = 12;
+const byte posSensorPin = 2;
+
+
+//  Global Var
 int speed = 0;
 int count = 0;
 int position = 100;
 byte direction = false;
 bool lcdFlag = false;
 
-// Functions
+//  Functions
 
 void motorA(int s, bool d)  {
   if (d == true) {
@@ -78,11 +83,15 @@ void setup() {
   // Serial.begin(9600);
   // Serial.println("go!");
 
+  // LCD start message
   lcd.begin();
   lcd.backlight();  //backlight ON.. off with /noBacklight
   lcd.setCursor(0, 0);
   lcd.print(F("Go!"));
   delay(1000);
+
+  // Initialize Keypad
+
 
 }
 
