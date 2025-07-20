@@ -3,16 +3,16 @@
 #include <LCD_I2C.h>
 #include <I2CKeyPad.h>
 
-//  Initialize LCD object
-LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
-
-//  Initialize Keypad object
-
-
 //  Global Const
 const byte A1A = 11;
 const byte A1B = 12;
 const byte posSensorPin = 2;
+
+//  Initialize I2C LCD object
+LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
+
+//  Initialize I2C Keypad object
+I2CKeyPad keyPad(0x20);
 
 
 //  Global Var
@@ -80,8 +80,8 @@ void setup() {
   pinMode(A1A, OUTPUT);
   pinMode(A1B, OUTPUT);
 
-  // Serial.begin(9600);
-  // Serial.println("go!");
+  Serial.begin(9600);
+  Serial.println("go!");
 
   // LCD start message
   lcd.begin();
@@ -91,6 +91,13 @@ void setup() {
   delay(1000);
 
   // Initialize Keypad
+  Wire.begin();
+  Wire.setClock(400000);
+  if (keyPad.begin() == true)
+  {
+    Serial.println("\nSUCCESS: keypad begin");
+  //  while(1);
+  }
 
 
 }
