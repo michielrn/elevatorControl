@@ -1,26 +1,34 @@
+//  Let op richting, teller en verschil met eerdere versie.
+
+
 //  Libraries
 #include <Arduino.h>
 #include <LCD_I2C.h>
 #include <I2CKeyPad.h>
 
+//  Proprietary types
+enum ElevatorStates {STOPPED, ACCELERATING, DECELERATING, MOVING};
+
 //  Global Const
-const byte A1A = 11;
-const byte A1B = 12;
-const byte posSensorPin = 2;
+const int A1A = 11;
+const int A1B = 12;
+const int posSensorPin = 2;
 
-//  Initialize I2C LCD object
+//  Initialize I2C LCD and Keypad objects
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
-
-//  Initialize I2C Keypad object
-I2CKeyPad keyPad(0x20);
+I2CKeyPad keyPad(0x20); // I2C address
 
 
-//  Global Var
-int speed = 0;
-int count = 0;
-int position = 100;
-byte direction = false;
-bool lcdFlag = false;
+int speed = 0;           
+int position = 100;        
+bool direction = false;   
+//  int destination = 0;     
+
+//  interface, output
+bool lcdFlag = false;     //  for tracking if LCD needs updating
+int count = 0;            //  test variable for showing increasing value on display
+
+ElevatorStates elevatorState = STOPPED;
 
 //  Functions
 
@@ -46,8 +54,6 @@ void lcdPrint() {
   lcdFlag = false;
 }
 
-// Count number of flanks passing before break beam sensor
-// triggered by hardware interrupt on posSensorPin
 void changePosition () {
   if (direction == true)  {
     position--;
@@ -80,8 +86,8 @@ void setup() {
   pinMode(A1A, OUTPUT);
   pinMode(A1B, OUTPUT);
 
-  Serial.begin(9600);
-  Serial.println("go!");
+  // Serial.begin(9600);
+  // Serial.println("go!");
 
   // LCD start message
   lcd.begin();
@@ -93,21 +99,22 @@ void setup() {
   // Initialize Keypad
   Wire.begin();
   Wire.setClock(400000);
+  lcd.setCursor(0, 1);
+
   if (keyPad.begin() == true)
   {
-    Serial.println("\nSUCCESS: keypad begin");
-  //  while(1);
+    lcd.print(F("KEYPAD SUCCESS"));
   }
+  else  {
+    lcd.print(F("KEYPAD FAIL"));
+  }
+
+  direction = false;
 
 
 }
 
 void loop() {
-
-  // De ene kant op
-  // op gang komen
-  // Serial.print(position);
-  // Serial.print (' ');
 
   // Op gang komen
   motorA(155, direction);
@@ -143,7 +150,6 @@ void loop() {
   doLCD();
 
   motorA(0, direction);
-  toggleDirection();
   delay(1000);
 
 
