@@ -25,13 +25,17 @@ int destination = 0;
 bool lcdFlag = false;
 int count = 0;
 ElevatorStates elevatorState = STOPPED;
+int keyPadValue = 0;
 
 //  Function declarations
 void motorA(int s, bool d);
 void changePosition();
 void toggleDirection();
+char handleKeypadInput (int &keyPadValue);
 void lcdPrint();
 void doLCD();
+
+// Main program
 
 void setup() {
   pinMode(posSensorPin, INPUT_PULLUP);
@@ -151,4 +155,8 @@ void doLCD()  {
   lcd.print(position);
   lcd.print(F(" "));
   lcd.print(direction);
+}
+
+char handleKeypadInput(int &keyPadValue) {
+  return;
 }
