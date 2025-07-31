@@ -10,8 +10,10 @@ enum ElevatorStates {STOPPED, ACCELERATING, DECELERATING, MOVING};
 const int A1A = 11;
 const int A1B = 12;
 const int posSensorPin = 2;
-const byte upward = false; // upward was forward
-const byte downward = true; // downward was backward
+const int upward = -1;
+const int downward = 1;
+// const byte upward = false; // upward was forward
+// const byte downward = true; // downward was backward
 
 //  I2C LCD and Keypad objects
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
@@ -20,7 +22,7 @@ I2CKeyPad keyPad(0x20); // I2C address
 //  Global vars
 int speed = 0;           
 int position = 100;        
-bool direction = upward;   
+int direction = upward;   
 int destination = 0;     
 bool lcdFlag = false;
 int count = 0;
@@ -28,7 +30,7 @@ ElevatorStates elevatorState = STOPPED;
 int keyPadValue = 0;
 
 //  Function declarations
-void motorA(int s, bool d);
+void motorA(int s, int d);
 void changePosition();
 void toggleDirection();
 char handleKeypadInput (int &keyPadValue);
@@ -111,11 +113,13 @@ void loop() {
   
   toggleDirection();
 
+  while(1);
+
 
 }
 
 // Function definitions
-void motorA(int s, bool d)  {
+void motorA(int s, int d)  {
   if (d == downward) {
     analogWrite (A1A, 255-s);
     digitalWrite(A1B, HIGH);
@@ -136,7 +140,7 @@ void changePosition () {
 }
 
 void toggleDirection()  {
- direction = !direction;
+ direction = (-1 * direction);
 }
 
 void lcdPrint() {
@@ -155,6 +159,7 @@ void doLCD()  {
   lcd.print(position);
   lcd.print(F(" "));
   lcd.print(direction);
+
 }
 
 char handleKeypadInput(int &keyPadValue) {
