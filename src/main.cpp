@@ -4,7 +4,7 @@
 #include <I2CKeyPad.h>
 
 //  Custom types
-enum ElevatorStates {STOPPED, ACCELERATING, DECELERATING, MOVING};
+enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED};
 
 //  Global Const
 const int A1A = 11;
@@ -23,9 +23,11 @@ I2CKeyPad keyPad(0x20); // I2C address
 int speed = 0;           
 int position = 100;        
 int direction = upward;   
-int destination = 0;     
+int destination = 100;
+int distance = 0;
+int value = 0;     
 bool lcdFlag = false;
-int count = 0;
+byte count = 0;
 ElevatorStates elevatorState = STOPPED;
 int keyPadValue = 0;
 
@@ -33,9 +35,10 @@ int keyPadValue = 0;
 void motorA(int s, int d);
 void changePosition();
 void toggleDirection();
-char handleKeypadInput (int &keyPadValue);
+char handleKeypadInput (int &value);
 void lcdPrint();
 void doLCD();
+void elevatorMachine();
 
 // Main program
 
@@ -63,62 +66,89 @@ void setup() {
  
   if (keyPad.begin() == true) {lcd.print(F("KEYPAD SUCCESS"));}
   else  {lcd.print(F("KEYPAD FAIL"));}
+
+  elevatorState = GET_INPUT;
 }
 
 void loop() {
 
-  // op gang komen
-  Serial.print(position);
-  Serial.print (' ');
-  delay(2500);
-  motorA(155, direction);
-  delay(2500);
+  elevatorMachine();
 
-  // Volle snelheid
+  // // op gang komen
+  // Serial.print(position);
+  // Serial.print (' ');
+  // delay(2500);
+  // motorA(155, direction);
+  // delay(2500);
 
-  motorA(255, direction);
-  delay(2500);
+  // // Volle snelheid
 
-  // afremmen
-  motorA(155, direction);
-  delay(2500);
+  // motorA(255, direction);
+  // delay(2500);
+
+  // // afremmen
+  // motorA(155, direction);
+  // delay(2500);
   
-  // stoppen
-  motorA(0, direction);
-  doLCD();
+  // // stoppen
+  // motorA(0, direction);
+  // doLCD();
 
-  // Omkeren
-  toggleDirection();
+  // // Omkeren
+  // toggleDirection();
   
-  // De andere kant op
-   Serial.println(position);
-  delay(2500);
-  motorA(155, direction);
+  // // De andere kant op
+  //  Serial.println(position);
+  // delay(2500);
+  // motorA(155, direction);
 
-  // Volle snelheid
+  // // Volle snelheid
 
-  delay(2500);
-  motorA(255, direction);
+  // delay(2500);
+  // motorA(255, direction);
 
-  // Afremmen
+  // // Afremmen
 
-  delay(2500);
-  motorA(155, direction);
+  // delay(2500);
+  // motorA(155, direction);
 
-  // Stoppen
+  // // Stoppen
   
-  delay(1000);
-  motorA(0, direction);
-  doLCD();
+  // delay(1000);
+  // motorA(0, direction);
+  // doLCD();
   
-  toggleDirection();
+  // toggleDirection();
 
-  while(1);
+  // while(1);
 
 
 }
 
 // Function definitions
+void elevatorMachine(){
+  switch (elevatorState)  {
+    case STOPPED: {
+      delay(2000);
+      elevatorState = GET_INPUT;
+      break;
+    }
+    case GET_INPUT: {
+      char c = handleKeypadInput(value);
+      lcd.print(c);
+    }
+    case ACCELERATING:  {
+      break;
+    }
+    case DECELERATING:  {
+      break;
+    }
+    case MOVING_FULL_SPEED: {
+      break;
+    }
+  }
+}
+
 void motorA(int s, int d)  {
   if (d == downward) {
     analogWrite (A1A, 255-s);
@@ -162,6 +192,41 @@ void doLCD()  {
 
 }
 
-char handleKeypadInput(int &keyPadValue) {
-  return;
+char handleKeypadInput(int &value) {
+  char v[19] = "123A456B789C*0#DNF";  //  N = NoKey, F = Fail
+  static uint8_t lastKey = 0;
+
+  uint8_t idx = keyPad.getKey();
+  char c = v[idx];
+
+  if (lastKey != c)
+  {
+    lastKey = c;
+    switch (c)
+    {
+      case '0' ... '9':
+        value *= 10;
+        value += c - '0';
+        return c;
+        break;
+      case '*':
+        if (value > 0) value /= 10;
+        break;
+      case '#':
+        value = 0;
+        break;
+      case 'A' ... 'D':
+        //  e.g. store value in EEPROM
+        break;
+      case 'F':
+        Serial.println("FAIL");
+        break;
+      case 'N':
+        Serial.println("NOKEY");
+        break;
+      default:
+        break;
+    }
+  }
+
 }
