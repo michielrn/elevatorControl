@@ -188,60 +188,62 @@ void setup() {
   else  {lcd.print(F("KEYPAD FAIL"));}
 
   elevatorState = GET_INPUT;
+
+    // op gang komen
+  Serial.print(position);
+  Serial.print (' ');
+  delay(2500);
+  motorA(155, direction);
+  delay(2500);
+
+  // Volle snelheid
+
+  motorA(255, direction);
+  delay(2500);
+
+  // afremmen
+  motorA(155, direction);
+  delay(2500);
+  
+  // stoppen
+  motorA(0, direction);
+  doLCD();
+
+  // Omkeren
+  toggleDirection();
+  
+  // De andere kant op
+   Serial.println(position);
+  delay(2500);
+  motorA(155, direction);
+
+  // Volle snelheid
+
+  delay(2500);
+  motorA(255, direction);
+
+  // Afremmen
+
+  delay(2500);
+  motorA(155, direction);
+
+  // Stoppen
+  
+  delay(1000);
+  motorA(0, direction);
+  doLCD();
+  
+  toggleDirection();
 }
 
 void loop() {
 
-  elevatorMachine();
+  //  elevatorMachine();
   char c = handleKeyPadValue(value);
-  lcdPrint();
-  Serial.println(c);
+  lcd.println(value);
+  Serial.println(value);
 
-  // // op gang komen
-  // Serial.print(position);
-  // Serial.print (' ');
-  // delay(2500);
-  // motorA(155, direction);
-  // delay(2500);
 
-  // // Volle snelheid
-
-  // motorA(255, direction);
-  // delay(2500);
-
-  // // afremmen
-  // motorA(155, direction);
-  // delay(2500);
-  
-  // // stoppen
-  // motorA(0, direction);
-  // doLCD();
-
-  // // Omkeren
-  // toggleDirection();
-  
-  // // De andere kant op
-  //  Serial.println(position);
-  // delay(2500);
-  // motorA(155, direction);
-
-  // // Volle snelheid
-
-  // delay(2500);
-  // motorA(255, direction);
-
-  // // Afremmen
-
-  // delay(2500);
-  // motorA(155, direction);
-
-  // // Stoppen
-  
-  // delay(1000);
-  // motorA(0, direction);
-  // doLCD();
-  
-  // toggleDirection();
 
   // while(1);
 
