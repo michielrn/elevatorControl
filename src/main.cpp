@@ -1,3 +1,7 @@
+// TODO
+// in void loop()
+// refactor 
+
 //  Libraries
 #include <Arduino.h>
 #include <LCD_I2C.h>
@@ -14,8 +18,12 @@ const int upward = -1;
 const int downward = 1;
 // const byte upward = false; // upward was forward
 // const byte downward = true; // downward was backward
+const byte kbInput = 2;
+const byte displacement = 3;
+const byte showDestination = 5;
 
-//  I2C LCD and Keypad objects
+
+//  initialize I2C LCD and Keypad objects
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
 I2CKeyPad keyPad(0x20); // I2C address
 
@@ -26,7 +34,7 @@ int direction = upward;
 int destination = 100;
 int distance = 0;
 int value = 0;     
-bool lcdFlag = false;
+byte lcdFlag = 0;
 byte count = 0;
 ElevatorStates elevatorState = STOPPED;
 
@@ -93,14 +101,25 @@ void toggleDirection()  {
 }
 
 void lcdPrint() {
-  if (lcdFlag == false) return;
+  if (lcdFlag == 0) return;
+  if (lcdFlag == kbInput) {
+    lcd.println(value);
+    lcdFlag = 0;
+    return;
+  }
+  if (lcdFlag == showDestination)   {
+    lcd.print(F("Moving to: "));
+    lcd.print(destination);
+    lcdFlag = 0;
+    return;
+  }
 
   count++;
   lcd.clear();
   lcd.print(count);
   lcd.print(position);
 
-  lcdFlag = false;
+  lcdFlag = 0;
 }
 
 void doLCD()  {
@@ -127,32 +146,36 @@ char handleKeyPadValue(int &value)
       case '0' ... '9':
         value *= 10;
         value += c - '0';
+        lcdFlag = kbInput;
         break;
       case '*':
         if (value > 0) value /= 10;
+        lcdFlag = kbInput;
         break;
       case '#':
         value = 0;
+        lcdFlag = kbInput;
         break;
       case 'A':
         destination = position + value;
-        lcdFlag = true;
+        lcdFlag = showDestination;
         break;
       case 'B':
         destination = position - value;
-        lcdFlag = true;
+        lcdFlag = showDestination;
         break;
       case 'C':
         break;
       case 'D':
         destination = value;
         lcdFlag = true;
+        lcdFlag = showDestination;
         break;
       case 'F':
         Serial.println("FAIL");
         break;
       case 'N':
-        Serial.println("NOKEY");
+        // Serial.println("NOKEY");
         break;
       default:
         break;
@@ -240,7 +263,7 @@ void loop() {
 
   //  elevatorMachine();
   char c = handleKeyPadValue(value);
-  lcd.println(value);
+  lcdPrint();
   Serial.println(value);
 
 
