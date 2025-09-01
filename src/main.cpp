@@ -103,13 +103,18 @@ void toggleDirection()  {
 void lcdPrint() {
   if (lcdFlag == 0) return;
   if (lcdFlag == kbInput) {
-    lcd.println(value);
+    lcd.clear();
+    lcd.print(value);
     lcdFlag = 0;
+    Serial.println(value);
     return;
   }
   if (lcdFlag == showDestination)   {
+    lcd.clear();
     lcd.print(F("Moving to: "));
     lcd.print(destination);
+    Serial.print(F("Moving to "));
+    Serial.print(destination);
     lcdFlag = 0;
     return;
   }
@@ -158,18 +163,20 @@ char handleKeyPadValue(int &value)
         break;
       case 'A':
         destination = position + value;
+        value = 0;
         lcdFlag = showDestination;
         break;
       case 'B':
         destination = position - value;
         lcdFlag = showDestination;
+        value = 0;
         break;
       case 'C':
         break;
       case 'D':
         destination = value;
-        lcdFlag = true;
         lcdFlag = showDestination;
+        value = 0;
         break;
       case 'F':
         Serial.println("FAIL");
@@ -215,9 +222,9 @@ void setup() {
     // op gang komen
   Serial.print(position);
   Serial.print (' ');
-  delay(2500);
+  delay(1000);
   motorA(155, direction);
-  delay(2500);
+  delay(1000);
 
   // Volle snelheid
 
@@ -226,7 +233,7 @@ void setup() {
 
   // afremmen
   motorA(155, direction);
-  delay(2500);
+  delay(1000);
   
   // stoppen
   motorA(0, direction);
@@ -236,27 +243,32 @@ void setup() {
   toggleDirection();
   
   // De andere kant op
-   Serial.println(position);
+  Serial.println(position);
   delay(2500);
   motorA(155, direction);
 
   // Volle snelheid
 
-  delay(2500);
+  delay(1000);
   motorA(255, direction);
 
   // Afremmen
 
-  delay(2500);
+  delay(500);
   motorA(155, direction);
 
   // Stoppen
   
-  delay(1000);
+  delay(500);
   motorA(0, direction);
   doLCD();
+  Serial.println(position);
   
   toggleDirection();
+
+  lcd.clear();
+  lcd.setCursor(0,0);
+
 }
 
 void loop() {
@@ -264,7 +276,7 @@ void loop() {
   //  elevatorMachine();
   char c = handleKeyPadValue(value);
   lcdPrint();
-  Serial.println(value);
+  // Serial.println(value);
 
 
 
