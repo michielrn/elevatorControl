@@ -60,7 +60,7 @@ void elevatorMachine(){
       break;
     }
     case GET_INPUT: {
-      while (destination == position) {break;}
+      if (destination == position) {break;}
       elevatorState = ACCELERATING;
       break;
     }
@@ -135,7 +135,7 @@ void doLCD()  {
 
 }
 
-char handleKeyPadValue(int &value)
+void handleKeyPadValue(int &value)
 {
   char v[19] = "123A456B789C*0#DNF";  //  N = NoKey, F = Fail
   static uint8_t lastKey = 0;
@@ -188,7 +188,7 @@ char handleKeyPadValue(int &value)
         break;
     }
   }
-  return c;
+  // return c;
 }
 
 
@@ -274,7 +274,7 @@ void setup() {
 void loop() {
 
   //  elevatorMachine();
-  char c = handleKeyPadValue(value);
+  handleKeyPadValue(value);
   lcdPrint();
   // Serial.println(value);
 
