@@ -1,54 +1,49 @@
-// TODO
-// in void loop()
-// refactor 
-
 //  Libraries
 #include <Arduino.h>
 #include <LCD_I2C.h>
 #include <I2CKeyPad.h>
 
-//  Custom types
+//  Types
 enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED};
 
-//  Global Const
+//  Const
+//  Motor control pins
 const int A1A = 11;
 const int A1B = 12;
+
+//  Input pin (for interrupt routine)
 const int posSensorPin = 2;
+
+//  Direction mapping
 const int upward = -1;
 const int downward = 1;
-// const byte upward = false; // upward was forward
-// const byte downward = true; // downward was backward
+
+//  LCD status bytes
 const byte kbInput = 2;
 const byte displacement = 3;
 const byte showDestination = 5;
-
 
 //  initialize I2C LCD and Keypad objects
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
 I2CKeyPad keyPad(0x20); // I2C address
 
-//  Global vars
+//  Initialisation of Global vars
+unsigned long currentMillis;  // for timers
+unsigned long previousMillis = 0;
+
 int speed = 0;           
 int position = 100;        
-int direction = upward;   
+int direction = upward; // upwards is -1
 int destination = 100;
 int distance = 0;
 int value = 0;     
+
 byte lcdFlag = 0;
 byte count = 0;
+
 ElevatorStates elevatorState = STOPPED;
+//  #endregion
 
-
-// Function declarations
-// void motorA(int s, int d);
-// void changePosition();
-// void toggleDirection();
-// // char handleKeyPadValue(value);
-// void lcdPrint();
-// void doLCD();
-// void elevatorMachine();
-
-// Main program
 
 // Function definitions
 void elevatorMachine(){
@@ -191,11 +186,18 @@ void handleKeyPadValue(int &value)
   // return c;
 }
 
+int distanceFunction (int pos, int dest) {
+  return abs(pos-dest);
+}
+
+int directionFunction (int pos, int dest) {
+  return (pos-dest / abs (pos - dest));
+}
 
 void setup() {
-  pinMode(posSensorPin, INPUT_PULLUP);
-  pinMode(A1A, OUTPUT);
-  pinMode(A1B, OUTPUT);
+  pinMode(posSensorPin, INPUT_PULLUP);  // position sensor
+  pinMode(A1A, OUTPUT);                 // Motor pin A
+  pinMode(A1B, OUTPUT);                 // Motor pin b
 
   attachInterrupt(digitalPinToInterrupt(posSensorPin),
                   changePosition,
@@ -205,62 +207,52 @@ void setup() {
   Serial.begin(9600);
   Serial.println("go!");
 
+  // Initialise the LCD display
   lcd.begin();
   lcd.backlight();  //backlight ON.. off with /noBacklight
   lcd.setCursor(0, 0);
   lcd.print(F("Go!"));
   lcd.setCursor(0, 1);
 
+  //  Initialise the I2C channel for Keypad and test connection
   Wire.begin();
   Wire.setClock(400000);
- 
   if (keyPad.begin() == true) {lcd.print(F("KEYPAD SUCCESS"));}
   else  {lcd.print(F("KEYPAD FAIL"));}
 
-  elevatorState = GET_INPUT;
-
-    // op gang komen
+  // Motor heen en weer, voor testen alle onderdelen
   Serial.print(position);
   Serial.print (' ');
   delay(1000);
-  motorA(155, direction);
-  delay(1000);
 
-  // Volle snelheid
-
-  motorA(255, direction);
-  delay(2500);
-
-  // afremmen
-  motorA(155, direction);
-  delay(1000);
+  direction = upward;
+  motorA(155, direction);   //laagste snelheid
+  delay(1000);              // voor 1 seconde
+  motorA(255, direction);   // Volle snelheid
+  delay(2500);              // voor 2,5 seconde
+  motorA(155, direction);   // laagste snelheid
+  delay(1000);              // voor 1 seconde
+  motorA(0, direction);     // stoppen
   
-  // stoppen
-  motorA(0, direction);
-  doLCD();
-
-  // Omkeren
-  toggleDirection();
-  
-  // De andere kant op
-  Serial.println(position);
+  doLCD();                  //  LCD Bijwerken
+  Serial.println(position); // Uitvoer naar Serial
   delay(2500);
+  
+  toggleDirection();        //  Omkeren
+  
+  // Terugkeren naar 100 PRECIES
+  destination = 100;
+  distance = distanceFunction(position, destination); // direction is negatief als lift naar boven moet, zie const int upward = -1
+  direction = directionFunction(position, destination); // wordt dus 1 voor naar beneden of -1 voor naar boven
+
   motorA(155, direction);
-
-  // Volle snelheid
-
   delay(1000);
   motorA(255, direction);
-
-  // Afremmen
-
   delay(500);
   motorA(155, direction);
-
-  // Stoppen
-  
   delay(500);
   motorA(0, direction);
+  
   doLCD();
   Serial.println(position);
   
