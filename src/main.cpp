@@ -32,11 +32,12 @@ unsigned long currentMillis;  // for timers
 unsigned long previousMillis = 0;
 
 int speed = 0;           
-int position = 100;        
+volatile int position = 100;        
 int direction = upward; // upwards is -1
 int destination = 100;
 int distance = 0;
-int value = 0;     
+int value = 0;          // for Keypad
+int counter = 0;     
 
 byte lcdFlag = 0;
 byte count = 0;
@@ -186,12 +187,22 @@ void handleKeyPadValue(int &value)
   // return c;
 }
 
+void doSerial() {
+    Serial.print(position);
+    Serial.print(" ");
+    Serial.print(destination);
+    Serial.print(" ");
+    Serial.print(distance);
+    Serial.print(" ");
+    Serial.println(speed);
+}
+
 int distanceFunction (int pos, int dest) {
   return abs(pos-dest);
 }
 
 int directionFunction (int pos, int dest) {
-  return (pos-dest / abs (pos - dest));
+  return ((pos-dest) / abs (pos - dest));
 }
 
 void setup() {
@@ -221,46 +232,73 @@ void setup() {
   else  {lcd.print(F("KEYPAD FAIL"));}
 
   // Motor heen en weer, voor testen alle onderdelen
-  Serial.print(position);
-  Serial.print (' ');
+
   delay(1000);
 
   direction = upward;
-  motorA(155, direction);   //laagste snelheid
-  delay(1000);              // voor 1 seconde
   motorA(255, direction);   // Volle snelheid
-  delay(2500);              // voor 2,5 seconde
-  motorA(155, direction);   // laagste snelheid
-  delay(1000);              // voor 1 seconde
+  while (counter <= 25) {
+    currentMillis = millis();
+    if (currentMillis - previousMillis >= 200)  {
+      previousMillis = currentMillis;
+      doSerial();
+      counter++;
+    }
+  }
   motorA(0, direction);     // stoppen
   
   doLCD();                  //  LCD Bijwerken
-  Serial.println(position); // Uitvoer naar Serial
+  doSerial();
   delay(2500);
-  
-  toggleDirection();        //  Omkeren
   
   // Terugkeren naar 100 PRECIES
   destination = 100;
   distance = distanceFunction(position, destination); // direction is negatief als lift naar boven moet, zie const int upward = -1
   direction = directionFunction(position, destination); // wordt dus 1 voor naar beneden of -1 voor naar boven
+  Serial.print(direction);
+  // op gang komen
+  Serial.println("Accelerating");
+  
+  speed = 155;
+  while ((speed <= 255) && (distance > 60)) {
+    doSerial();
+    distance = distanceFunction(position, destination);
+    motorA(speed, direction);
+    speed++;
+  }
 
-  motorA(155, direction);
-  delay(1000);
-  motorA(255, direction);
-  delay(500);
-  motorA(155, direction);
-  delay(500);
+  Serial.println("Full speed");
+  while (distance > 60) {
+    distance = distanceFunction(position, destination);
+    doSerial();
+  }
+
+  Serial.println("Decelerate");
+  while ((distance <= 70) && (speed > 155)) {
+    distance = distanceFunction(position, destination);
+    motorA(speed, direction);
+    speed--;
+    doSerial();
+    if (distance <= 2) {
+      motorA(0, direction);
+    }
+  }
+  
+  Serial.println("Minimal speed");
+  while (distance >= 1) {
+    distance = distanceFunction(position, destination);
+    doSerial();
+    if (distance < 2) break;
+  }
   motorA(0, direction);
   
   doLCD();
   Serial.println(position);
-  
-  toggleDirection();
-
+  delay(2000);
   lcd.clear();
   lcd.setCursor(0,0);
 
+  
 }
 
 void loop() {
