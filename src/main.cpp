@@ -31,7 +31,7 @@ I2CKeyPad keyPad(0x20); // I2C address
 unsigned long currentMillis;  // for timers
 unsigned long previousMillis = 0;
 
-int speed = 0;           
+byte speed = 0;           
 volatile int position = 100;        
 int direction = upward; // upwards is -1
 int destination = 100;
@@ -83,13 +83,9 @@ void motorA(int s, int d)  {
   }
 }
 
+// Attached to interrupt
 void changePosition () {
-  if (direction == downward)  {
-    position--;
-  }
-  else  {
-    position++;
-  }
+  position -= direction; // if direction = -1, increase position by 1
 }
 
 void toggleDirection()  {
@@ -197,12 +193,12 @@ void doSerial() {
     Serial.println(speed);
 }
 
-int distanceFunction (int pos, int dest) {
-  return abs(pos-dest);
+void updateDistance() {
+  distance = (abs(position - destination)); //distance always positive integer
 }
 
-int directionFunction (int pos, int dest) {
-  return ((pos-dest) / abs (pos - dest));
+void setDirection() {
+  direction =  ((position-destination) / abs (position - destination));
 }
 
 void setup() {
@@ -251,42 +247,60 @@ void setup() {
   doSerial();
   delay(2500);
   
-  // Terugkeren naar 100 PRECIES
-  destination = 100;
-  distance = distanceFunction(position, destination); // direction is negatief als lift naar boven moet, zie const int upward = -1
-  direction = directionFunction(position, destination); // wordt dus 1 voor naar beneden of -1 voor naar boven
+  counter = 0;
+  direction = downward;
+  motorA(255, direction);   // Volle snelheid
+  while (counter <= 25) {
+    currentMillis = millis();
+    if (currentMillis - previousMillis >= 200)  {
+      previousMillis = currentMillis;
+      doSerial();
+      counter++;
+    }
+  }
+  motorA(0, direction);     // stoppen
+  doLCD();
+  doSerial();
+
+  // Vooruit naar 300 PRECIES
+  destination = 300;
+  updateDistance(); // direction is negatief als lift naar boven moet, zie const int upward = -1
+  setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
   Serial.print(direction);
+  
+  // Eerste fase: omhoog voor een paar seconden
   // op gang komen
   Serial.println("Accelerating");
   
   speed = 155;
-  while ((speed <= 255) && (distance > 60)) {
+  while ((speed <= 250) && (distance > 60)) {
     doSerial();
-    distance = distanceFunction(position, destination);
+    updateDistance();
     motorA(speed, direction);
     speed++;
   }
 
   Serial.println("Full speed");
   while (distance > 60) {
-    distance = distanceFunction(position, destination);
+    updateDistance();
     doSerial();
   }
 
   Serial.println("Decelerate");
   while ((distance <= 70) && (speed > 155)) {
-    distance = distanceFunction(position, destination);
+    updateDistance();
+        if (distance <= 2) {
+      motorA(0, direction);
+    }
     motorA(speed, direction);
     speed--;
     doSerial();
-    if (distance <= 2) {
-      motorA(0, direction);
-    }
+
   }
   
   Serial.println("Minimal speed");
   while (distance >= 1) {
-    distance = distanceFunction(position, destination);
+    updateDistance();
     doSerial();
     if (distance < 2) break;
   }
