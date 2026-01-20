@@ -6,13 +6,10 @@
 //  Types
 enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED};
 
-//  Const
-//  Motor control pins
-const int A1A = 11;
+//  Pins
+const int A1A = 11;   // Motor Control pins
 const int A1B = 12;
-
-//  Input pin (for interrupt routine)
-const int posSensorPin = 2;
+const int posSensorPin = 2; //  Input pin position sensor
 
 //  Direction mapping
 const int upward = -1;
@@ -32,19 +29,19 @@ unsigned long currentMillis;  // for timers
 unsigned long previousMillis = 0;
 
 byte speed = 0;           
+
 volatile int position = 100;        
+
 int direction = upward; // upwards is -1
 int destination = 100;
-int distance = 0;
+int distance = 0;       // Necessary? Maybe better in loop conditions?
 int value = 0;          // for Keypad
-int counter = 0;     
+int counter = 0;        // for the loops
 
 byte lcdFlag = 0;
 byte count = 0;
 
 ElevatorStates elevatorState = STOPPED;
-//  #endregion
-
 
 // Function definitions
 void elevatorMachine(){
@@ -83,7 +80,7 @@ void motorA(int s, int d)  {
   }
 }
 
-// Attached to interrupt
+// Attached to interrupt (see setup())
 void changePosition () {
   position -= direction; // if direction = -1, increase position by 1
 }
@@ -186,7 +183,7 @@ void handleKeyPadValue(int &value)
 void doSerial() {
     Serial.print(position);
     Serial.print(" ");
-    Serial.print(destination);
+    Serial.print(direction);
     Serial.print(" ");
     Serial.print(distance);
     Serial.print(" ");
@@ -231,88 +228,75 @@ void setup() {
 
   delay(1000);
 
-  direction = upward;
-  motorA(255, direction);   // Volle snelheid
-  while (counter <= 25) {
-    currentMillis = millis();
-    if (currentMillis - previousMillis >= 200)  {
-      previousMillis = currentMillis;
-      doSerial();
-      counter++;
-    }
-  }
-  motorA(0, direction);     // stoppen
+  // direction = upward;
+  // motorA(255, direction);   // Volle snelheid
+  // while (counter <= 25) {
+  //   currentMillis = millis();
+  //   if (currentMillis - previousMillis >= 200)  {
+  //     previousMillis = currentMillis;
+  //     doSerial();
+  //     counter++;
+  //   }
+  // }
+  // motorA(0, direction);     // stoppen
   
-  doLCD();                  //  LCD Bijwerken
+  // doLCD();                  //  LCD Bijwerken
+  // doSerial();
+  // delay(2500);
+  
+  // counter = 0;
+  // direction = downward;
+  // motorA(255, direction);   // Volle snelheid
+  // while (counter <= 25) {
+  //   currentMillis = millis();
+  //   if (currentMillis - previousMillis >= 200)  {
+  //     previousMillis = currentMillis;
+  //     doSerial();
+  //     counter++;
+  //   }
+  // }
+  // motorA(0, direction);     // stoppen
+  // doLCD();
+  // doSerial();
+  // delay(1000);
+
+  // 80 naar beneden
+  destination = position - 80;
+  // updateDistance(); // direction is negatief als lift naar boven moet, zie const int upward = -1
+  setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
+  Serial.println(direction);
+
+  
+  while (abs(position - destination) > 20)  {
+    motorA(255, direction);
+  }
+  doLCD();
   doSerial();
-  delay(2500);
-  
-  counter = 0;
-  direction = downward;
-  motorA(255, direction);   // Volle snelheid
-  while (counter <= 25) {
-    currentMillis = millis();
-    if (currentMillis - previousMillis >= 200)  {
-      previousMillis = currentMillis;
-      doSerial();
-      counter++;
-    }
+  while (abs(position - destination) > 2)  {
+    motorA(155, direction);
   }
-  motorA(0, direction);     // stoppen
+  motorA(0, direction);
   doLCD();
   doSerial();
 
-  // Vooruit naar 300 PRECIES
-  destination = 300;
-  updateDistance(); // direction is negatief als lift naar boven moet, zie const int upward = -1
+
+  // 80 naar boven
+  destination = position + 80;
+  // updateDistance(); // direction is negatief als lift naar boven moet, zie const int upward = -1
   setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
   Serial.print(direction);
   
-  // Eerste fase: omhoog voor een paar seconden
-  // op gang komen
-  Serial.println("Accelerating");
-  
-  speed = 155;
-  while ((speed <= 250) && (distance > 60)) {
-    doSerial();
-    updateDistance();
-    motorA(speed, direction);
-    speed++;
+  while (abs(position - destination) > 20)  {
+    motorA(255, direction);
   }
-
-  Serial.println("Full speed");
-  while (distance > 60) {
-    updateDistance();
-    doSerial();
-  }
-
-  Serial.println("Decelerate");
-  while ((distance <= 70) && (speed > 155)) {
-    updateDistance();
-        if (distance <= 2) {
-      motorA(0, direction);
-    }
-    motorA(speed, direction);
-    speed--;
-    doSerial();
-
-  }
-  
-  Serial.println("Minimal speed");
-  while (distance >= 1) {
-    updateDistance();
-    doSerial();
-    if (distance < 2) break;
+  doLCD();
+  doSerial();
+  while (abs(position - destination) > 2)  {
+    motorA(155, direction);
   }
   motorA(0, direction);
-  
   doLCD();
-  Serial.println(position);
-  delay(2000);
-  lcd.clear();
-  lcd.setCursor(0,0);
-
-  
+  doSerial();
 }
 
 void loop() {
