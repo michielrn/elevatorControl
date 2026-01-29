@@ -7,6 +7,13 @@ Therefore, when position = 30 and destination = 15 (moving downward to get to de
 - distance = abs(position - destination) = abs(30 - 15) = 15
 - direction = int(distance / (position - destination)) = 15/15 = 1.
 
-## New problem: counter during timed operation >> counter during state machine operation
+## New problem: using PWM on motor output pin interferes with counts of interrupt events
 Found in: ```setup()```:
-Turning the motor on and off (full speed) for a predetermined time using ```delay``` has a certain result for position in both directions, roughly the same. Moving the motor whilst updating ```distance``` and accelerating/decelerating according to this value results in FAR SHORTER movement. After software revision, this could be a debounce problem. RC network could be the solution.
+Using pin 11 or pin 6 for motor speed control, and using pwm duty cycle of 155, ounting of interrupt events (which determine the position of the elevator main axle) is moving upward (but not Downward). At full speed, this does not occur. Hypothesis: PWM signal from the Arduino Uno R3 interferes with the interrupt pin. 
+
+Performed diagnostics: scope reading of output pin shows _some_ bounce but it seems not enough to mess up the input signal. Also, input signal happens over RC network of 1 kOhm, 100nF for debounce, bounce amplitude is <1v.
+
+Next diagnostics: scope reading pf PWM pins
+
+Attempted solutions: using PWM pin 6 instead of 11: no result.
+Next attempt: set different duty cycle of 180, 200.

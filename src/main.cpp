@@ -7,8 +7,8 @@
 enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED};
 
 //  Constants
-const int A1A = 11;         // Motor Control pins
-const int A1B = 12;
+const int A1A = 6;         // Motor Control pin (PWM)
+const int A1B = 12;         // Motor Control pin (direction)
 const int posSensorPin = 2; //  Input pin position sensor
 const int upward = -1;      //  Direction mapping
 const int downward = 1;
@@ -225,7 +225,7 @@ void setup() {
 
   
   while (abs(position - destination) >= 1)  {
-    motorA(155, direction);
+    motorA(255, direction);
   }
   doLCD();
   doSerial();
@@ -242,7 +242,7 @@ void setup() {
   Serial.println(direction);
   
   while (abs(position - destination) >= 1)  {
-    motorA(155, direction);
+    motorA(255, direction);
   }
   // doLCD();
   // doSerial();
