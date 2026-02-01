@@ -7,9 +7,9 @@
 enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED};
 
 //  Constants
-const int A1A = 6;         // Motor Control pin (PWM)
-const int A1B = 12;         // Motor Control pin (direction)
-const int posSensorPin = 2; //  Input pin position sensor
+const byte A1A = 6;         // Motor Control pin (PWM)
+const byte A1B = 8;         // Motor Control pin (direction)
+const byte posSensorPin = 2; //  Input pin position sensor
 const int upward = -1;      //  Direction mapping
 const int downward = 1;
 const byte kbInput = 2;     //  LCD status bytes
@@ -24,7 +24,7 @@ I2CKeyPad keyPad(0x20); // I2C address
 unsigned long currentMillis;  // for timers
 unsigned long previousMillis = 0;
 byte speed = 0;           
-volatile int position = 100;        
+volatile int position = 100;
 int direction = upward; // upwards is -1
 int destination = 100;
 int distance;       // Necessary? Maybe better in loop conditions?
@@ -201,7 +201,8 @@ void setup() {
   Serial.begin(9600);
   Serial.println("go!");
 
-  // Initialise the LCD display
+  // Commented out for testing
+  // // Initialise the LCD display
   lcd.begin();
   lcd.backlight();  //backlight ON.. off with /noBacklight
   lcd.setCursor(0, 0);
@@ -219,11 +220,11 @@ void setup() {
   delay(1000);
 
   // maak precies 1 rondje
+  
+  
   destination = 180;
   setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
   Serial.println(direction);
-
-  
   while (abs(position - destination) >= 1)  {
     motorA(255, direction);
   }
