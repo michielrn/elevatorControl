@@ -20,10 +20,13 @@ Using pwm duty cycle of 155 or 180 (out of 255), counting of interrupt events (w
 
 Hypothesis: PWM signal from the Arduino Uno R3 interferes with the interrupt pin. 
 
-Performed diagnostics: scope reading of output pin shows _some_ bounce but it seems not enough to mess up the input signal. Also, input signal happens over RC network of 1 kOhm, 100nF for debounce, bounce amplitude is <1v. An additional 1 uF capacitor in parrallel with the 100nF has no effect.
+Performed diagnostics: scope reading of infrared sensor output pin shows _some_ bounce but it seems not enough to mess up the input signal. Furthermore this interference should then also occur at full speed, which it does not. Also, input signal happens over RC network of 1 kOhm, 100nF for debounce, bounce amplitude is <1v. An additional 1 uF capacitor in parrallel with the 100nF has no effect.
 
 Scope reading pf PWM pins is normal.
 Scope reading of Infrared gate output is normal.
+Swapping out the Uno R3 (classic) for a SMD version has no effect.
+Using the other H-bridge on the dual L9110 board has no effect.
 
 ## Hardware Setup (Fritzing)
+(RC debounce network for IR break beam output not displayed)
 ![breakBeamMotorDriver_bb](https://github.com/user-attachments/assets/712798a0-35fc-4a0e-a5b5-eb8eb1a5e954)

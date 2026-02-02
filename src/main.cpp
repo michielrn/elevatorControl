@@ -226,7 +226,7 @@ void setup() {
   setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
   Serial.println(direction);
   while (abs(position - destination) >= 1)  {
-    motorA(255, direction);
+    motorA(155, direction);
   }
   doLCD();
   doSerial();
@@ -243,7 +243,7 @@ void setup() {
   Serial.println(direction);
   
   while (abs(position - destination) >= 1)  {
-    motorA(255, direction);
+    motorA(155, direction);
   }
   // doLCD();
   // doSerial();
