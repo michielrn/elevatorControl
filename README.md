@@ -7,8 +7,6 @@ Therefore, when position = 30 and destination = 15 (moving downward to get to de
 - distance = abs(position - destination) = abs(30 - 15) = 15
 - direction = int(distance / (position - destination)) = 15/15 = 1.
 
-## Hardware setup
-
 
 ## Unsolved problem: using PWM on motor output pin interferes with counts of interrupt events
 The goal is to determine the position of a gear mounted on an axle driven by a DC motor by counting the passing teeth before an IR receiver (Break Beam Sensor) connected to pin 2 (interrupt pin). The change of the output of the IR reveiver (the "event") triggers the interrupt routine which adds or subtracts 1 from the position of the gear, depending on the direction of rotation. For a gear with N teeth, a full revolution is therefore complete when 2*N events have been detected as both the obstruction of the light and the passing of the obstruction count as events.
@@ -26,3 +24,6 @@ Performed diagnostics: scope reading of output pin shows _some_ bounce but it se
 
 Scope reading pf PWM pins is normal.
 Scope reading of Infrared gate output is normal.
+
+## Hardware Setup (Fritzing)
+![breakBeamMotorDriver_bb](https://github.com/user-attachments/assets/712798a0-35fc-4a0e-a5b5-eb8eb1a5e954)
