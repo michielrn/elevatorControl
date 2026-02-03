@@ -16,10 +16,6 @@ const byte kbInput = 2;     //  LCD status bytes
 const byte displacement = 3;
 const byte showDestination = 5;
 
-//  initialize I2C LCD and Keypad objects
-LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
-I2CKeyPad keyPad(0x20); // I2C address
-
 //  Global vars
 unsigned long currentMillis;  // for timers
 unsigned long previousMillis = 0;
@@ -33,6 +29,10 @@ int counter = 0;        // for the loops
 byte lcdFlag = 0;
 byte count = 0;
 ElevatorStates elevatorState = STOPPED;
+
+//  initialize I2C LCD and Keypad objects
+LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
+I2CKeyPad keyPad(0x20); // I2C address
 
 // Function definitions
 void elevatorMachine(){
@@ -75,9 +75,6 @@ void changePosition () {  // Attached to interrupt (see setup())
   position -= direction; // if direction = -1, increase position by 1
 }
 
-void toggleDirection()  {
- direction = (-1 * direction);
-}
 
 void lcdPrint() {
   if (lcdFlag == 0) return;
@@ -191,7 +188,9 @@ void setDirection() {
 void setup() {
   pinMode(posSensorPin, INPUT_PULLUP);  // position sensor
   pinMode(A1A, OUTPUT);                 // Motor pin A
-  pinMode(A1B, OUTPUT);                 // Motor pin b
+  pinMode(A1B, OUTPUT);                 // Motor pin B
+  digitalWrite(A1A, 0);
+  digitalWrite(A1B, 0);
 
   attachInterrupt(digitalPinToInterrupt(posSensorPin),
                   changePosition,
@@ -199,38 +198,42 @@ void setup() {
 
 
   Serial.begin(9600);
-  Serial.println("go!");
+  Serial.println("set LCD");
+  delay(1000);
 
-  // Commented out for testing
-  // // Initialise the LCD display
+  // // Display startup message on the LCD display
   lcd.begin();
   lcd.backlight();  //backlight ON.. off with /noBacklight
   lcd.setCursor(0, 0);
   lcd.print(F("Go!"));
   lcd.setCursor(0, 1);
+  delay(1000);
 
+  Serial.println("set keypad");
   //  Initialise the I2C channel for Keypad and test connection
   Wire.begin();
   Wire.setClock(400000);
   if (keyPad.begin() == true) {lcd.print(F("KEYPAD SUCCESS"));}
   else  {lcd.print(F("KEYPAD FAIL"));}
-
-  // Motor heen en weer, voor testen alle onderdelen
-
   delay(1000);
 
+  // Motor heen en weer, voor testen alle onderdelen
   // maak precies 1 rondje
   
-  
+  Serial.println("set dest");
+  delay(1000);
   destination = 180;
+
+  Serial.println("set dir");
+  delay(1000);
   setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
   Serial.println(direction);
+
+  Serial.println("moving");
+  delay(1000);
   while (abs(position - destination) >= 1)  {
-    motorA(155, direction);
+    motorA(255, direction);
   }
-  doLCD();
-  doSerial();
-  
   motorA(0, direction);
   doLCD();
   doSerial();
@@ -243,13 +246,8 @@ void setup() {
   Serial.println(direction);
   
   while (abs(position - destination) >= 1)  {
-    motorA(155, direction);
+    motorA(255, direction);
   }
-  // doLCD();
-  // doSerial();
-  // while (abs(position - destination) > 2)  {
-  //   motorA(155, direction);
-  // }
   motorA(0, direction);
   doLCD();
   doSerial();
