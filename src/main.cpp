@@ -232,7 +232,7 @@ void setup() {
   Serial.println("moving");
   delay(1000);
   while (abs(position - destination) >= 1)  {
-    motorA(255, direction);
+    motorA(155, direction);
   }
   motorA(0, direction);
   doLCD();
@@ -246,7 +246,7 @@ void setup() {
   Serial.println(direction);
   
   while (abs(position - destination) >= 1)  {
-    motorA(255, direction);
+    motorA(155, direction);
   }
   motorA(0, direction);
   doLCD();

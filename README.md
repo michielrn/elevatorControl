@@ -8,14 +8,14 @@ Therefore, when position = 30 and destination = 15 (moving downward to get to de
 - direction = int(distance / (position - destination)) = 15/15 = 1.
 
 
-## Unsolved problem: using PWM on motor output pin interferes with counts of interrupt events
+## Solved problem: using PWM on motor output pin interferes with counts of interrupt events
 The goal is to determine the position of a gear mounted on an axle driven by a DC motor by counting the passing teeth before an IR receiver (Break Beam Sensor) connected to pin 2 (interrupt pin). The change of the output of the IR reveiver (the "event") triggers the interrupt routine which adds or subtracts 1 from the position of the gear, depending on the direction of rotation. For a gear with N teeth, a full revolution is therefore complete when 2*N events have been detected as both the obstruction of the light and the passing of the obstruction count as events.
 
 Motor is controlled with a L9110 chip over pins 6 (PWM) to A1A and 8 to A1B.
 
 Two I2C devices are connected to SDA and SDC: a port expander for a keypad and a 1602 LCD screen. They are for now considered to be of no effect on the problem at hand.
 
-### The problem
+### The problem 
 Using pwm duty cycle of 155 or 180 (out of 255), counting of interrupt events (which determine the position of gear on the axle) is unreliable: the counting of events happens MUCH more than the actual occurrence. At full speed, this does not occur. 
 
 Hypothesis: PWM signal from the Arduino Uno R3 interferes with the interrupt pin. 
@@ -26,6 +26,9 @@ Scope reading pf PWM pins is normal.
 Scope reading of Infrared gate output is normal.
 Swapping out the Uno R3 (classic) for a SMD version has no effect.
 Using the other H-bridge on the dual L9110 board has no effect.
+
+### Solved, 8 february 2026
+Problem solved by increasing the distance between the Arduino board and the DC motor. All tests passed (PWM@155 and 255).
 
 ## Hardware Setup (Fritzing)
 (RC debounce network for IR break beam output not displayed)
