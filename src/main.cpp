@@ -4,15 +4,18 @@
 #include <I2CKeyPad.h>
 
 //  Types
-enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED};
+enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED, UPPER_LIMIT, LOWER_LIMIT};
 
 //  Constants
-const byte A1A = 6;         // Motor Control pin (PWM)
-const byte A1B = 8;         // Motor Control pin (direction)
-const byte posSensorPin = 2; //  Input pin position sensor
-const int upward = -1;      //  Direction mapping
-const int downward = 1;
-const byte kbInput = 2;     //  LCD status bytes
+const byte A1A = 6;           // Motor Control pin (PWM)
+const byte A1B = 8;           // Motor Control pin (direction)
+const byte posSensorPin = 2;  // Input pin position sensor
+const byte lowerLimit = 12;   // limit switch, bottom
+const byte upperLimit = 10;   // limit switch, top  
+const int upward = -1;        // Direction mapping, upward
+const int downward = 1;       // direction mapping, downward
+
+const byte kbInput = 2;       // LCD status bytes
 const byte displacement = 3;
 const byte showDestination = 5;
 
@@ -55,6 +58,12 @@ void elevatorMachine(){
       break;
     }
     case MOVING_FULL_SPEED: {
+      break;
+    }
+    case LOWER_LIMIT: {
+      break;
+    }
+    case UPPER_LIMIT: {
       break;
     }
   }
@@ -187,6 +196,8 @@ void setDirection() {
 
 void setup() {
   pinMode(posSensorPin, INPUT_PULLUP);  // position sensor
+  pinMode(lowerLimit, INPUT_PULLUP);
+  pinMode(upperLimit, INPUT_PULLUP);
   pinMode(A1A, OUTPUT);                 // Motor pin A
   pinMode(A1B, OUTPUT);                 // Motor pin B
   digitalWrite(A1A, 0);
@@ -218,11 +229,11 @@ void setup() {
   delay(1000);
 
   // Motor heen en weer, voor testen alle onderdelen
-  // maak precies 1 rondje
+  // 4 tanden
   
   Serial.println("set dest");
   delay(1000);
-  destination = 180;
+  destination = 108;
 
   Serial.println("set dir");
   delay(1000);
@@ -232,7 +243,7 @@ void setup() {
   Serial.println("moving");
   delay(1000);
   while (abs(position - destination) >= 1)  {
-    motorA(155, direction);
+    motorA(255, direction);
   }
   motorA(0, direction);
   doLCD();
@@ -246,7 +257,7 @@ void setup() {
   Serial.println(direction);
   
   while (abs(position - destination) >= 1)  {
-    motorA(155, direction);
+    motorA(255, direction);
   }
   motorA(0, direction);
   doLCD();
