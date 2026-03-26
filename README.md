@@ -28,7 +28,7 @@ Swapping out the Uno R3 (classic) for a SMD version has no effect.
 Using the other H-bridge on the dual L9110 board has no effect.
 
 ### Solved, 8 february 2026
-Problem solved by increasing the distance between the Arduino board and the DC motor. All tests passed (PWM@155 and 255).
+Problem solved by increasing the distance between the Arduino board and the DC motor and attaching the DC motor to a separate power supply. All tests passed (PWM@155 and 255).
 
 ## Hardware Setup (Fritzing)
 (RC debounce network for IR break beam output not displayed)
