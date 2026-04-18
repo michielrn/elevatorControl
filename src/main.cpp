@@ -4,7 +4,8 @@
 #include <I2CKeyPad.h>
 
 //  Types
-enum ElevatorStates {STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED, UPPER_LIMIT, LOWER_LIMIT};
+enum ElevatorStates {ERROR, STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED, UPPER_LIMIT, LOWER_LIMIT};
+enum LcdStates      {INIT_SETUP, UPDATE_POSITION, KEYPAD_INPUT, UPDATE_FLOORS, UPDATE_QUEUE};
 
 //  Constants
 const byte A1A = 6;           // Motor Control pin (PWM)
@@ -29,21 +30,38 @@ int destination = 100;
 int distance;       // Necessary? Maybe better in loop conditions?
 int value = 0;          // for Keypad
 int counter = 0;        // for the loops
+int minimumPos;
+int maximumPos;
 byte lcdFlag = 0;
 byte count = 0;
 ElevatorStates elevatorState = STOPPED;
+LcdStates lcdState = INIT_SETUP;
 
 //  initialize I2C LCD and Keypad objects
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
 I2CKeyPad keyPad(0x20); // I2C address
 
 // Function definitions
+
+void motorA(int s, int d)  {
+  if (d == downward) {
+    analogWrite (A1A, 255-s);
+    digitalWrite(A1B, HIGH);
+  }
+  if (d == upward) {
+    analogWrite (A1A, s);
+    digitalWrite (A1B, LOW);
+  }
+}
 void elevatorMachine(){
   switch (elevatorState)  {
     case STOPPED: {
       delay(2000);
       lcd.clear();
       elevatorState = GET_INPUT;
+      break;
+    }
+    case ERROR: {
       break;
     }
     case GET_INPUT: {
@@ -69,21 +87,26 @@ void elevatorMachine(){
   }
 }
 
-void motorA(int s, int d)  {
-  if (d == downward) {
-    analogWrite (A1A, 255-s);
-    digitalWrite(A1B, HIGH);
-  }
-  if (d == upward) {
-    analogWrite (A1A, s);
-    digitalWrite (A1B, LOW);
+void limiterMachine() {
+  if (lowerLimit == LOW) {
+    motorA(0, direction);
+    elevatorState = LOWER_LIMIT;
+    minimumPos = position;}
+  else if (upperLimit == LOW) {
+    motorA(0, direction);
+    elevatorState = UPPER_LIMIT;
+    maximumPos = position;}
+  else if ((upperLimit == LOW) && (lowerLimit == LOW))  {
+    motorA(0, direction);
+    elevatorState = ERROR;
   }
 }
+
+
 
 void changePosition () {  // Attached to interrupt (see setup())
   position -= direction; // if direction = -1, increase position by 1
 }
-
 
 void lcdPrint() {
   if (lcdFlag == 0) return;
@@ -196,8 +219,8 @@ void setDirection() {
 
 void setup() {
   pinMode(posSensorPin, INPUT_PULLUP);  // position sensor
-  pinMode(lowerLimit, INPUT_PULLUP);
-  pinMode(upperLimit, INPUT_PULLUP);
+  pinMode(lowerLimit, INPUT_PULLUP);    // lower limiter switch
+  pinMode(upperLimit, INPUT_PULLUP);    // upper 
   pinMode(A1A, OUTPUT);                 // Motor pin A
   pinMode(A1B, OUTPUT);                 // Motor pin B
   digitalWrite(A1A, 0);
