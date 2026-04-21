@@ -5,7 +5,7 @@
 
 //  Types
 enum ElevatorStates {ERROR, STOPPED, GET_INPUT, ACCELERATING, DECELERATING, MOVING_FULL_SPEED, UPPER_LIMIT, LOWER_LIMIT};
-enum LcdStates      {INIT_SETUP, UPDATE_POSITION, KEYPAD_INPUT, UPDATE_FLOORS, UPDATE_QUEUE};
+enum LcdStates      {SHOW_ERROR, INIT_SETUP, UPDATE_POSITION, KEYPAD_INPUT, UPDATE_FLOORS, UPDATE_QUEUE};
 
 //  Constants
 const byte A1A = 6;           // Motor Control pin (PWM)
@@ -36,6 +36,7 @@ byte lcdFlag = 0;
 byte count = 0;
 ElevatorStates elevatorState = STOPPED;
 LcdStates lcdState = INIT_SETUP;
+LcdStates lcdPreviousState = INIT_SETUP;
 
 //  initialize I2C LCD and Keypad objects
 LCD_I2C lcd(0x27, 16, 2); // I2C address, columns, rows
@@ -101,8 +102,6 @@ void limiterMachine() {
     elevatorState = ERROR;
   }
 }
-
-
 
 void changePosition () {  // Attached to interrupt (see setup())
   position -= direction; // if direction = -1, increase position by 1
@@ -217,6 +216,61 @@ void setDirection() {
   direction =  ((position-destination) / abs (position - destination));
 }
 
+void displayStartupMessages()  {
+  
+  //  Serial port
+  Serial.begin(9600);
+  Serial.println("set LCD");
+  delay(1000);
+  
+  //  LCD display
+  lcd.begin();
+  lcd.backlight();  //backlight ON.. off with /noBacklight
+  lcd.setCursor(0, 0);
+  lcd.print(F("Go!"));
+  lcd.setCursor(0, 1);
+  delay(1000);
+
+  //  Initialise the I2C channel for Keypad and test connection
+  Serial.println("set keypad");
+  Wire.begin();
+  Wire.setClock(400000);
+  if (keyPad.begin() == true) {lcd.print(F("KEYPAD SUCCESS"));}
+  else  {lcd.print(F("KEYPAD FAIL"));}
+  delay(1000);
+}
+
+void lcdMachine() {
+  switch (lcdState) {
+    case SHOW_ERROR:  {
+      break;
+    }
+    case INIT_SETUP:  {
+      break;
+    }
+    case UPDATE_POSITION: {
+      break;
+    }
+    case KEYPAD_INPUT:  {
+      break;
+    }
+    case UPDATE_FLOORS: {
+      break;  // reserved for when the elevator will move to floors instead of destination numbers
+    }
+    case UPDATE_QUEUE:  {
+      break;  //  reserved for when elevator will have a queue to work with
+    }
+  }
+  {
+  case constant expression:
+    /* code */
+    break;
+  
+  default:
+    break;
+  }
+}
+
 void setup() {
   pinMode(posSensorPin, INPUT_PULLUP);  // position sensor
   pinMode(lowerLimit, INPUT_PULLUP);    // lower limiter switch
@@ -230,26 +284,11 @@ void setup() {
                   changePosition,
                   CHANGE);
 
+  displayStartupMessages();
 
-  Serial.begin(9600);
-  Serial.println("set LCD");
-  delay(1000);
-
-  // // Display startup message on the LCD display
-  lcd.begin();
-  lcd.backlight();  //backlight ON.. off with /noBacklight
-  lcd.setCursor(0, 0);
-  lcd.print(F("Go!"));
-  lcd.setCursor(0, 1);
-  delay(1000);
-
-  Serial.println("set keypad");
-  //  Initialise the I2C channel for Keypad and test connection
-  Wire.begin();
-  Wire.setClock(400000);
-  if (keyPad.begin() == true) {lcd.print(F("KEYPAD SUCCESS"));}
-  else  {lcd.print(F("KEYPAD FAIL"));}
-  delay(1000);
+  if ((lowerLimit == LOW) && upperLimit == LOW) {
+    elevatorState = ERROR;
+  }
 
   // Motor heen en weer, voor testen alle onderdelen
   // 4 tanden
