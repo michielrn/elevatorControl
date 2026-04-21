@@ -261,14 +261,6 @@ void lcdMachine() {
       break;  //  reserved for when elevator will have a queue to work with
     }
   }
-  {
-  case constant expression:
-    /* code */
-    break;
-  
-  default:
-    break;
-  }
 }
 
 void setup() {
