@@ -240,6 +240,37 @@ void displayStartupMessages()  {
   delay(1000);
 }
 
+void testPositionSensor() 
+{
+  if (lowerLimit == LOW)  
+  {
+    direction = upward;
+    motorA(255, direction);
+    delay(2000);
+    motorA(0,0);
+  }
+  if (upperLimit == LOW)  
+  {
+    direction = downward;
+    motorA(255, direction);
+    delay(2000);
+    motorA(0,0);
+  }
+  destination = position + 8;
+  previousMillis = millis();
+  currentMillis = millis();
+  while ((abs(position - destination) >=1) && (currentMillis-previousMillis <1000)) 
+  {
+    currentMillis = millis();
+    motorA(255, upward);
+  }
+  if ((position+1) < destination) {
+    Serial.println ("pos sensor error");
+    while (1);
+  }
+}
+
+
 void lcdMachine() {
   switch (lcdState) {
     case SHOW_ERROR:  {
@@ -277,6 +308,7 @@ void setup() {
                   CHANGE);
 
   displayStartupMessages();
+  testPositionSensor();
 
   if ((lowerLimit == LOW) && upperLimit == LOW) {
     elevatorState = ERROR;
