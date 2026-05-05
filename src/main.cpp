@@ -34,6 +34,7 @@ int minimumPos;
 int maximumPos;
 byte lcdFlag = 0;
 byte count = 0;
+byte limitSwitchFlag = 0;
 ElevatorStates elevatorState = STOPPED;
 LcdStates lcdState = INIT_SETUP;
 LcdStates lcdPreviousState = INIT_SETUP;
@@ -217,9 +218,7 @@ void setDirection() {
 }
 
 void displayStartupMessages()  {
-  
-  //  Serial port
-  Serial.begin(9600);
+
   Serial.println("set LCD");
   delay(1000);
   
@@ -240,34 +239,62 @@ void displayStartupMessages()  {
   delay(1000);
 }
 
-void testPositionSensor() 
-{
-  if (lowerLimit == LOW)  
-  {
-    direction = upward;
-    motorA(255, direction);
-    delay(2000);
-    motorA(0,0);
-  }
-  if (upperLimit == LOW)  
-  {
-    direction = downward;
-    motorA(255, direction);
-    delay(2000);
-    motorA(0,0);
-  }
-  destination = position + 8;
+void testLimitSwitches() {
+  Serial.print("press lower limit switch: ");
+  delay(1000);
   previousMillis = millis();
   currentMillis = millis();
-  while ((abs(position - destination) >=1) && (currentMillis-previousMillis <1000)) 
-  {
+  while (currentMillis - previousMillis < 5000){
     currentMillis = millis();
-    motorA(255, upward);
+    if (digitalRead(lowerLimit) == LOW){ limitSwitchFlag = 1; break;} 
   }
-  if ((position+1) < destination) {
-    Serial.println ("pos sensor error");
-    while (1);
+  Serial.println(limitSwitchFlag);
+  limitSwitchFlag = 0;
+
+  Serial.print("press upper limit switch: ");
+  delay(1000);
+  previousMillis = millis();
+  currentMillis = millis();
+  while (currentMillis - previousMillis < 5000){
+    currentMillis = millis();
+    if (digitalRead(upperLimit) == LOW) { limitSwitchFlag = 1; break;} 
   }
+  Serial.println(limitSwitchFlag);
+}
+
+void testPositionSensor() 
+{
+  Serial.println ("sending motor dwn");
+  direction = downward;
+  position = 100;
+  Serial.print(position);
+  motorA(255, direction);
+  delay(2000);
+  motorA(0, direction);
+  Serial.println(position);
+  // while(1);
+  
+  // test motor + sensor , go 50 teeth down
+  position = 100;
+  Serial.println("set dest");
+  delay(1000);
+  destination = 150;
+
+  Serial.print("set dir: ");
+  delay(1000);
+  setDirection(); // wordt dus 1 voor naar beneden of -1 voor naar boven
+  Serial.println(direction);
+
+  Serial.println("moving");
+  delay(1000);
+  while (abs(position - destination) >= 0)  {
+    motorA(255, direction);
+  }
+  motorA(0, direction);
+  Serial.println(position);
+
+  while (1);
+  
 }
 
 
@@ -306,9 +333,14 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(posSensorPin),
                   changePosition,
                   CHANGE);
+  
+  //  Serial port
+  Serial.begin(9600);
 
   displayStartupMessages();
+  testLimitSwitches();
   testPositionSensor();
+  while (1);
 
   if ((lowerLimit == LOW) && upperLimit == LOW) {
     elevatorState = ERROR;
